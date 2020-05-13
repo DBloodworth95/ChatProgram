@@ -1,6 +1,5 @@
 package ChatClient.src.com.cp;
 
-import javax.management.Query;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
