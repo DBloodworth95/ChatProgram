@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 
 public class UserListPane extends JPanel implements UserStatusListener, MessageListener {
     private final ChatClient client;
@@ -21,6 +22,11 @@ public class UserListPane extends JPanel implements UserStatusListener, MessageL
     private DefaultListModel<String> listModel = new DefaultListModel<>();
     DefaultListModel<String> chatHistory = new DefaultListModel<>();
     JList<String> jChatHistory = new JList<>(chatHistory);
+    HashMap<String, String> emojiParse = new HashMap<>() {{
+       put(":)", ":smiley:");
+       put(";)", ":wink:");
+       put(":(", ":worried:");
+    }};
 
 
     public UserListPane(ChatClient client) {
@@ -39,6 +45,7 @@ public class UserListPane extends JPanel implements UserStatusListener, MessageL
                 if(e.getClickCount() > 1) {
                     ArrayList<Message> msgHistory = new ArrayList<>();
                     String login = userList.getSelectedValue();
+                    //Fetches conversation history and adds to JList.
                     String receivedQuery = "SELECT * FROM messages WHERE author ='" + login + "' AND sendto='" + client.getUsername() + "'";
                     String sentQuery = "SELECT * FROM messages WHERE author ='" + client.getUsername() + "' AND sendto='" + login + "'";
                     try {
@@ -57,6 +64,7 @@ public class UserListPane extends JPanel implements UserStatusListener, MessageL
                     } catch (SQLException throwables) {
                         throwables.printStackTrace();
                     }
+                    //Sort messages by time sent.
                     msgHistory.sort(new Comparator<Message>() {
                         @Override
                         public int compare(Message message, Message t1) {
@@ -65,16 +73,26 @@ public class UserListPane extends JPanel implements UserStatusListener, MessageL
                             return message.getTime().compareTo(t1.getTime());
                         }
                     });
+                    //Loop through the HashMap which stores key sequences corresponding to a emoji alias
+                    //Replaces the key sequence found in a message with the emoji alias.
+                    //Parse the message to unicode to display emojis to UI.
                     for (Message message : msgHistory) {
-                        String parseMsg = EmojiParser.parseToUnicode(message.getMsg());
+                        String msg = message.getMsg();
+                        for(HashMap.Entry<String, String> entry : emojiParse.entrySet()) {
+                            if(msg.contains(entry.getKey()))
+                                msg = msg.replace(entry.getKey(), entry.getValue());
+                        }
+                        String parseMsg = EmojiParser.parseToUnicode(msg);
+                        //If message was sent by user, add "you: + message"
+                        //Else add author + message
                         if (message.getAuthor().equalsIgnoreCase(client.getUsername()))
                             chatHistory.addElement("You: " + parseMsg);
                         else
                             chatHistory.addElement(message.getAuthor() + ": " + parseMsg);
                     }
-
+                    //Displays the UI.
                     JFrame f = new JFrame("Message " + login);
-                    MessagePane messagePane = new MessagePane(client, login, jChatHistory, chatHistory, listModel);
+                    MessagePane messagePane = new MessagePane(client, login, jChatHistory, chatHistory, listModel, emojiParse);
                     f.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                     f.setSize(500,500);
                     f.getContentPane().add(messagePane, BorderLayout.CENTER);
@@ -127,6 +145,10 @@ public class UserListPane extends JPanel implements UserStatusListener, MessageL
         preparedStatement.setString(2, client.getUsername());
         preparedStatement.setString(3, msg);
         preparedStatement.execute();
+        for(HashMap.Entry<String, String> entry : emojiParse.entrySet()) {
+            if(msg.contains(entry.getKey()))
+                msg = msg.replace(entry.getKey(), entry.getValue());
+        }
         String parseMsg = EmojiParser.parseToUnicode(msg);
         String line = fromLogin + ": " + parseMsg;
         listModel.addElement(line);

@@ -11,15 +11,18 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.HashMap;
 
 public class MessagePane extends JPanel {
     private final ChatClient client;
     private final String login;
+    private final HashMap<String, String> emojiParse;
     private JTextField inputField = new JTextField();
 
-    public MessagePane(ChatClient client, String login, JList<String>messageList, DefaultListModel<String> listModel, DefaultListModel<String> otherListModel) {
+    public MessagePane(ChatClient client, String login, JList<String>messageList, DefaultListModel<String> listModel, DefaultListModel<String> otherListModel, HashMap<String, String> emojiParse) {
         this.client = client;
         this.login = login;
+        this.emojiParse = emojiParse;
         setLayout(new BorderLayout());
         add(new JScrollPane(messageList), BorderLayout.CENTER);
         add(inputField, BorderLayout.SOUTH);
@@ -30,6 +33,13 @@ public class MessagePane extends JPanel {
                 try {
                     String msg = inputField.getText();
                     client.msg(login, msg);
+                    //Loop through the HashMap which stores key sequences corresponding to a emoji alias
+                    //Replaces the key sequence found in a message with the emoji alias.
+                    //Parse the message to unicode to display emojis to UI.
+                    for(HashMap.Entry<String, String> entry : emojiParse.entrySet()) {
+                        if(msg.contains(entry.getKey()))
+                            msg = msg.replace(entry.getKey(), entry.getValue());
+                    }
                     String parseMsg = EmojiParser.parseToUnicode(msg);
                     listModel.addElement("You: " + parseMsg);
                     otherListModel.addElement(client.getUsername() + ":" + " " + msg);
