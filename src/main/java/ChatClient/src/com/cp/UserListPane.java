@@ -1,5 +1,7 @@
 package ChatClient.src.com.cp;
 
+import com.vdurmont.emoji.EmojiParser;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -64,10 +66,11 @@ public class UserListPane extends JPanel implements UserStatusListener, MessageL
                         }
                     });
                     for (Message message : msgHistory) {
+                        String parseMsg = EmojiParser.parseToUnicode(message.getMsg());
                         if (message.getAuthor().equalsIgnoreCase(client.getUsername()))
-                            chatHistory.addElement("You: " + message.getMsg());
+                            chatHistory.addElement("You: " + parseMsg);
                         else
-                            chatHistory.addElement(message.getAuthor() + ": " + message.getMsg());
+                            chatHistory.addElement(message.getAuthor() + ": " + parseMsg);
                     }
 
                     JFrame f = new JFrame("Message " + login);
@@ -124,8 +127,8 @@ public class UserListPane extends JPanel implements UserStatusListener, MessageL
         preparedStatement.setString(2, client.getUsername());
         preparedStatement.setString(3, msg);
         preparedStatement.execute();
-        String login = userList.getSelectedValue();
-        String line = fromLogin + ": " + msg;
+        String parseMsg = EmojiParser.parseToUnicode(msg);
+        String line = fromLogin + ": " + parseMsg;
         listModel.addElement(line);
         chatHistory.addElement(line);
         System.out.println(line);

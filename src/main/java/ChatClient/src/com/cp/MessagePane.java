@@ -1,5 +1,7 @@
 package ChatClient.src.com.cp;
 
+import com.vdurmont.emoji.EmojiParser;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -28,7 +30,8 @@ public class MessagePane extends JPanel {
                 try {
                     String msg = inputField.getText();
                     client.msg(login, msg);
-                    listModel.addElement("You: " + msg);
+                    String parseMsg = EmojiParser.parseToUnicode(msg);
+                    listModel.addElement("You: " + parseMsg);
                     otherListModel.addElement(client.getUsername() + ":" + " " + msg);
                     inputField.setText("");
 
