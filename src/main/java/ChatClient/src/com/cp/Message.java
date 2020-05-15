@@ -3,11 +3,12 @@ package ChatClient.src.com.cp;
 import java.sql.Timestamp;
 
 public class Message {
-    private String author;
-    private String sendTo;
-    private String msg;
-    private Timestamp time;
-    public static class Builder{
+    private final String author;
+    private final String sendTo;
+    private final String msg;
+    private final Timestamp time;
+
+    public static class Builder {
         private String author;
         private String sendTo;
         private String msg;
@@ -47,31 +48,12 @@ public class Message {
         return author;
     }
 
-    public void setAuthor(String author) {
-        this.author = author;
-    }
-
-    public String getSendTo() {
-        return sendTo;
-    }
-
-    public void setSendTo(String sendTo) {
-        this.sendTo = sendTo;
-    }
 
     public Timestamp getTime() {
         return time;
     }
 
-    public void setTime(Timestamp time) {
-        this.time = time;
-    }
-
     public String getMsg() {
         return msg;
-    }
-
-    public void setMsg(String msg) {
-        this.msg = msg;
     }
 }

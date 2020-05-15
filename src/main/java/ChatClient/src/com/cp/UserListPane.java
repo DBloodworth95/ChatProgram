@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 
+@SuppressWarnings("ALL")
 public class UserListPane extends JPanel implements UserStatusListener, MessageListener {
     private final ChatClient client;
     private JList<String> userList;

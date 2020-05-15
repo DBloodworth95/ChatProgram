@@ -1,12 +1,10 @@
 package ChatClient.src.com.cp;
-
-import javax.management.Query;
 import java.sql.*;
 
 public class QueryHandler {
-    private String dbUrl;
-    private String username;
-    private String password;
+    private final String dbUrl;
+    private final String username;
+    private final String password;
 
     public QueryHandler() {
         this.dbUrl = "jdbc:mysql://localhost:3306/sys";
@@ -15,8 +13,7 @@ public class QueryHandler {
     }
 
     public Connection getConnection() throws SQLException {
-        Connection myConnection = DriverManager.getConnection(dbUrl, username, password);
-        return myConnection;
+        return DriverManager.getConnection(dbUrl, username, password);
     }
 
     public String getDbUrl() {
