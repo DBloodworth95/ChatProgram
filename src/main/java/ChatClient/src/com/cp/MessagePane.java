@@ -17,12 +17,14 @@ public class MessagePane extends JPanel {
     private final ChatClient client;
     private final String login;
     private final HashMap<String, String> emojiParse;
+    private final DefaultListModel<String> otherListModel;
     private JTextField inputField = new JTextField();
 
     public MessagePane(ChatClient client, String login, JList<String>messageList, DefaultListModel<String> listModel, DefaultListModel<String> otherListModel, HashMap<String, String> emojiParse) {
         this.client = client;
         this.login = login;
         this.emojiParse = emojiParse;
+        this.otherListModel = otherListModel;
         setLayout(new BorderLayout());
         add(new JScrollPane(messageList), BorderLayout.CENTER);
         add(inputField, BorderLayout.SOUTH);
@@ -60,13 +62,15 @@ public class MessagePane extends JPanel {
             }
         });
     }
-
-
     public JTextField getInputField() {
         return inputField;
     }
 
     public void setInputField(JTextField inputField) {
         this.inputField = inputField;
+    }
+
+    public DefaultListModel<String> getModel() {
+        return otherListModel;
     }
 }

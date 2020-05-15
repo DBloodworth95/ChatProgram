@@ -7,12 +7,40 @@ public class Message {
     private String sendTo;
     private String msg;
     private Timestamp time;
+    public static class Builder{
+        private String author;
+        private String sendTo;
+        private String msg;
+        private Timestamp time;
 
-    public Message(String author, String sendTo, String msg, Timestamp time) {
-        this.author = author;
-        this.sendTo = sendTo;
-        this.msg = msg;
-        this.time = time;
+        public Builder() {
+
+        }
+        public Builder author(String val) {
+            author = val;
+            return this;
+        }
+        public Builder sendTo(String val) {
+            sendTo = val;
+            return this;
+        }
+        public Builder msg(String val) {
+            msg = val;
+            return this;
+        }
+        public Builder time(Timestamp val) {
+            time = val;
+            return this;
+        }
+        public Message build() {
+            return new Message(this);
+        }
+    }
+    public Message(Builder builder) {
+        author = builder.author;
+        sendTo = builder.sendTo;
+        msg = builder.msg;
+        time = builder.time;
     }
 
     public String getAuthor() {

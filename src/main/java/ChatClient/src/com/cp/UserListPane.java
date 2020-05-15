@@ -1,13 +1,10 @@
 package ChatClient.src.com.cp;
 
 import com.vdurmont.emoji.EmojiParser;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
@@ -20,14 +17,14 @@ public class UserListPane extends JPanel implements UserStatusListener, MessageL
     private DefaultListModel<String> userListModel;
     //Message pane content
     private DefaultListModel<String> listModel = new DefaultListModel<>();
-    DefaultListModel<String> chatHistory = new DefaultListModel<>();
-    JList<String> jChatHistory = new JList<>(chatHistory);
+    DefaultListModel<String> chatHistory;
+    JList<String> jChatHistory;
+    private ArrayList<MessagePane> activeMessagePanes = new ArrayList<>();
     HashMap<String, String> emojiParse = new HashMap<>() {{
        put(":)", ":smiley:");
        put(";)", ":wink:");
        put(":(", ":worried:");
     }};
-
 
     public UserListPane(ChatClient client) {
         this.client = client;
@@ -38,11 +35,12 @@ public class UserListPane extends JPanel implements UserStatusListener, MessageL
         add(new JScrollPane(userList), BorderLayout.CENTER);
         client.addMessageListener(this);
         QueryHandler queryHandler = new QueryHandler();
-
         userList.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if(e.getClickCount() > 1) {
+                    chatHistory = new DefaultListModel<>();
+                    jChatHistory = new JList<>(chatHistory);
                     ArrayList<Message> msgHistory = new ArrayList<>();
                     String login = userList.getSelectedValue();
                     //Fetches conversation history and adds to JList.
@@ -54,16 +52,27 @@ public class UserListPane extends JPanel implements UserStatusListener, MessageL
                         PreparedStatement sentStatement = queryHandler.getConnection().prepareStatement(sentQuery);
                         ResultSet resultSet = sentStatement.executeQuery();
                         while(resultSetReceived.next()) {
-                            Message message = new Message(resultSetReceived.getString("author"), resultSetReceived.getString("sendto"), resultSetReceived.getString("message"), resultSetReceived.getTimestamp("time"));
+                            Message message = new Message.Builder()
+                                    .author(resultSetReceived.getString("author"))
+                                    .sendTo(resultSetReceived.getString("sendto"))
+                                    .msg(resultSetReceived.getString("message"))
+                                    .time(resultSetReceived.getTimestamp("time"))
+                                    .build();
                             msgHistory.add(message);
                         }
                         while(resultSet.next()) {
-                            Message message = new Message(resultSet.getString("author"), resultSet.getString("sendto"),resultSet.getString("message"), resultSet.getTimestamp("time"));
+                            Message message = new Message.Builder()
+                                    .author(resultSet.getString("author"))
+                                    .sendTo(resultSet.getString("sendto"))
+                                    .msg(resultSet.getString("message"))
+                                    .time(resultSet.getTimestamp("time"))
+                                    .build();
                             msgHistory.add(message);
                         }
                     } catch (SQLException throwables) {
                         throwables.printStackTrace();
                     }
+
                     //Sort messages by time sent.
                     msgHistory.sort(new Comparator<Message>() {
                         @Override
@@ -90,19 +99,17 @@ public class UserListPane extends JPanel implements UserStatusListener, MessageL
                         else
                             chatHistory.addElement(message.getAuthor() + ": " + parseMsg);
                     }
+
                     //Displays the UI.
                     JFrame f = new JFrame("Message " + login);
                     MessagePane messagePane = new MessagePane(client, login, jChatHistory, chatHistory, listModel, emojiParse);
+
                     f.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                     f.setSize(500,500);
                     f.getContentPane().add(messagePane, BorderLayout.CENTER);
                     f.setVisible(true);
-                    f.addWindowListener(new WindowAdapter() {
-                        @Override
-                        public void windowClosing(WindowEvent e) {
-                            chatHistory.removeAllElements();
-                        }
-                    });
+                    activeMessagePanes.add(messagePane);
+
                 }
             }
         });
@@ -137,6 +144,7 @@ public class UserListPane extends JPanel implements UserStatusListener, MessageL
 
     @Override
     public void onMessage(String fromLogin, String msg) throws SQLException {
+        String login = userList.getSelectedValue();
         String query = "INSERT INTO messages(author, sendto, message) VALUES (?,?,?)";
         QueryHandler queryHandler = new QueryHandler();
         Connection myConnection = DriverManager.getConnection(queryHandler.getDbUrl(), queryHandler.getUsername(), queryHandler.getPassword());
@@ -150,9 +158,11 @@ public class UserListPane extends JPanel implements UserStatusListener, MessageL
                 msg = msg.replace(entry.getKey(), entry.getValue());
         }
         String parseMsg = EmojiParser.parseToUnicode(msg);
-        String line = fromLogin + ": " + parseMsg;
-        listModel.addElement(line);
-        chatHistory.addElement(line);
-        System.out.println(line);
+        if(login.equalsIgnoreCase(fromLogin)) {
+            String line = fromLogin + ": " + parseMsg;
+            listModel.addElement(line);
+            chatHistory.addElement(line);
+        }
+        //System.out.println(line);
     }
 }
