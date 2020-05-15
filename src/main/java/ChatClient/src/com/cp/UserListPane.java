@@ -99,17 +99,21 @@ public class UserListPane extends JPanel implements UserStatusListener, MessageL
                         else
                             chatHistory.addElement(message.getAuthor() + ": " + parseMsg);
                     }
-
                     //Displays the UI.
                     JFrame f = new JFrame("Message " + login);
-                    MessagePane messagePane = new MessagePane(client, login, jChatHistory, chatHistory, listModel, emojiParse);
-
+                    MessagePane messagePane = new MessagePane.Builder()
+                            .client(client)
+                            .recipient(login)
+                            .jListChatHistory(jChatHistory)
+                            .chatHistoryModel(chatHistory)
+                            .domainListModel(listModel)
+                            .emojiParser(emojiParse)
+                            .build();
                     f.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                     f.setSize(500,500);
                     f.getContentPane().add(messagePane, BorderLayout.CENTER);
                     f.setVisible(true);
                     activeMessagePanes.add(messagePane);
-
                 }
             }
         });
@@ -163,6 +167,5 @@ public class UserListPane extends JPanel implements UserStatusListener, MessageL
             listModel.addElement(line);
             chatHistory.addElement(line);
         }
-        //System.out.println(line);
     }
 }

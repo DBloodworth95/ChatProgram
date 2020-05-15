@@ -17,16 +17,56 @@ public class MessagePane extends JPanel {
     private final ChatClient client;
     private final String login;
     private final HashMap<String, String> emojiParse;
-    private final DefaultListModel<String> otherListModel;
+    private final DefaultListModel<String> listModel;
     private JTextField inputField = new JTextField();
 
-    public MessagePane(ChatClient client, String login, JList<String>messageList, DefaultListModel<String> listModel, DefaultListModel<String> otherListModel, HashMap<String, String> emojiParse) {
-        this.client = client;
-        this.login = login;
-        this.emojiParse = emojiParse;
-        this.otherListModel = otherListModel;
+    public static class Builder {
+        private ChatClient client;
+        private String login;
+        private HashMap<String, String> emojiParse;
+        private DefaultListModel<String> listModel;
+        private DefaultListModel<String> chatHistoryModel;
+        private JList<String> jChatHistory;
+
+        public Builder() {
+
+        }
+        public Builder client(ChatClient val) {
+            client = val;
+            return this;
+        }
+        public Builder recipient(String val) {
+            login = val;
+            return this;
+        }
+        public Builder emojiParser(HashMap<String, String> val) {
+            emojiParse = val;
+            return this;
+        }
+        public Builder domainListModel(DefaultListModel<String> val) {
+            listModel = val;
+            return this;
+        }
+        public Builder chatHistoryModel(DefaultListModel<String> val) {
+            chatHistoryModel = val;
+            return this;
+        }
+        public Builder jListChatHistory(JList<String> val) {
+            jChatHistory = val;
+            return this;
+        }
+        public MessagePane build() {
+            return new MessagePane(this.jChatHistory, this.chatHistoryModel,this);
+        }
+    }
+
+    public MessagePane(JList<String>jChatHistory, DefaultListModel<String> chatHistoryModel, Builder builder) {
+        client = builder.client;
+        login = builder.login;
+        emojiParse = builder.emojiParse;
+        listModel = builder.listModel;
         setLayout(new BorderLayout());
-        add(new JScrollPane(messageList), BorderLayout.CENTER);
+        add(new JScrollPane(jChatHistory), BorderLayout.CENTER);
         add(inputField, BorderLayout.SOUTH);
 
         inputField.addActionListener(new ActionListener() {
@@ -43,8 +83,8 @@ public class MessagePane extends JPanel {
                             msg = msg.replace(entry.getKey(), entry.getValue());
                     }
                     String parseMsg = EmojiParser.parseToUnicode(msg);
-                    listModel.addElement("You: " + parseMsg);
-                    otherListModel.addElement(client.getUsername() + ":" + " " + msg);
+                    chatHistoryModel.addElement("You: " + parseMsg);
+                    listModel.addElement(client.getUsername() + ":" + " " + msg);
                     inputField.setText("");
 
                     //Database update.
@@ -61,16 +101,5 @@ public class MessagePane extends JPanel {
                 }
             }
         });
-    }
-    public JTextField getInputField() {
-        return inputField;
-    }
-
-    public void setInputField(JTextField inputField) {
-        this.inputField = inputField;
-    }
-
-    public DefaultListModel<String> getModel() {
-        return otherListModel;
     }
 }
